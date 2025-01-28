@@ -1,0 +1,2 @@
+# gobotai
+a golang ai 
