@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 
@@ -14,7 +13,7 @@ func main() {
 	initialize()
 }
 
-func initialize() {
+func initialize() *tfidf.TFIDF {
 	// Load the existing corpus of training phrases as text
 	corpus, err := LoadCorpus("go_corpus.md")
 	if err != nil {
@@ -26,14 +25,12 @@ func initialize() {
 	// calculating Inverse Document Frequency which says how important a word is
 	tfidf := tfidf.NewTFIDF(corpus)
 
-	//Calculate and store TF-IDF vectors for each document
-	vectors := tfidf.CalculateScores()
+	//Calculate and store TF-IDF scores for each word
+	tfidf.CalculateScores()
 
-	// Store the vectors in the map
-	for word, value := range vectors {
-		fmt.Printf("Word: %+v Value: %+v \n", word, value)
-	}
-
+	// get the top 20 keywords
+	tfidf.ExtractKeywords(20)
+	return tfidf
 }
 
 // LoadCorpus loads the corpus from a text file and returns a slice of strings.

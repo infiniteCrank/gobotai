@@ -3,6 +3,7 @@ package tfidf
 import (
 	"math"
 	"regexp"
+	"sort"
 	"strings"
 )
 
@@ -13,6 +14,7 @@ type TFIDF struct {
 	WordsInDoc     []string           // this conatins all the words in the corpus
 	ProcessedWords []string           // words after lettimizing and stemming
 	Scores         map[string]float64 // Calculate the TF-IDF score  from TF and IDF
+	TopKeyWords    map[string]float64 // The top X keywords in the corpus
 }
 
 // NewTFIDF creates a new TFIDF instance based on the provided corpus of documents.
@@ -188,4 +190,32 @@ func advancedStem(word string) string {
 		}
 	}
 	return word // Return the original word if no modifications were made
+}
+
+// Keyword extraction function
+func (tfidf *TFIDF) ExtractKeywords(topN int) map[string]float64 {
+
+	// Create a slice to hold the key-value pairs
+	type kv struct {
+		Key   string
+		Value float64
+	}
+
+	var sortedTerms []kv
+	for k, v := range tfidf.Scores {
+		sortedTerms = append(sortedTerms, kv{k, v})
+	}
+
+	// Sort the slice by value
+	sort.Slice(sortedTerms, func(i, j int) bool {
+		return sortedTerms[i].Value > sortedTerms[j].Value
+	})
+
+	// Create a map for the top N keywords
+	topKeywords := make(map[string]float64)
+	for i := 0; i < topN && i < len(sortedTerms); i++ {
+		topKeywords[sortedTerms[i].Key] = sortedTerms[i].Value
+	}
+
+	return topKeywords
 }
