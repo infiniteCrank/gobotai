@@ -26,25 +26,14 @@ func initialize() {
 	// calculating Inverse Document Frequency which says how important a word is
 	tfidf := tfidf.NewTFIDF(corpus)
 
-	for word, value := range tfidf.TermFrequency {
-		fmt.Printf("word: %+v value: %+v \n", word, value)
+	//Calculate and store TF-IDF vectors for each document
+	vectors := tfidf.CalculateScores()
+
+	// Store the vectors in the map
+	for word, value := range vectors {
+		fmt.Printf("Word: %+v Value: %+v \n", word, value)
 	}
 
-	for word, value := range tfidf.InverseDocFreq {
-		fmt.Printf("word: %+v value: %+v \n", word, value)
-	}
-	// Declare a map to store the TF-IDF vectors
-	//var vectors = make(map[string]float64)
-
-	// Calculate and store TF-IDF vectors for each document
-	// for _, doc := range corpus {
-	// 	vector := tfidf.CalculateVector(doc)
-
-	// 	// Store the vectors in the map
-	// 	for word, value := range vector {
-	// 		vectors[word] = value // Store each word and its corresponding TF-IDF value
-	// 	}
-	// }
 }
 
 // LoadCorpus loads the corpus from a text file and returns a slice of strings.

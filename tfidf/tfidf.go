@@ -10,6 +10,9 @@ import (
 type TFIDF struct {
 	TermFrequency  map[string]float64 // Frequencies of terms in the corpus
 	InverseDocFreq map[string]float64 // Inverse document frequencies for terms
+	WordsInDoc     []string           // this conatins all the words in the corpus
+	ProcessedWords []string           // words after lettimizing and stemming
+	Scores         map[string]float64 // Calculate the TF-IDF score  from TF and IDF
 }
 
 // NewTFIDF creates a new TFIDF instance based on the provided corpus of documents.
@@ -19,9 +22,10 @@ func NewTFIDF(corpus []string) *TFIDF {
 
 	var wordsFinal []string
 	re := regexp.MustCompile("[^a-zA-Z0-9]+") // Match one or more non-letter and non-number characters
-	// Calculate Term Frequency (TF)
+
+	// Split document into words
 	for _, doc := range corpus {
-		words := strings.Fields(doc) // Split document into words
+		words := strings.Fields(doc)
 		for _, word := range words {
 			// replace punctuation with space
 			moreWords := re.ReplaceAllString(word, " ")
@@ -30,7 +34,11 @@ func NewTFIDF(corpus []string) *TFIDF {
 		}
 	}
 
-	for _, word := range wordsFinal {
+	// Apply enhanced NLP processing
+	processedWords := processWords(wordsFinal)
+
+	// Calculate Term Frequency (TF)
+	for _, word := range processedWords {
 		tf[word]++ // Count occurrences of each word
 	}
 
@@ -40,7 +48,7 @@ func NewTFIDF(corpus []string) *TFIDF {
 	}
 
 	// Return a new instance of TFIDF with calculated TF and IDF
-	return &TFIDF{TermFrequency: tf, InverseDocFreq: idf}
+	return &TFIDF{TermFrequency: tf, InverseDocFreq: idf, WordsInDoc: wordsFinal, ProcessedWords: processedWords}
 }
 
 // countDocumentsContainingTerm counts how many documents contain a specific term.
@@ -55,22 +63,25 @@ func countDocumentsContainingTerm(corpus []string, term string) int {
 }
 
 // CalculateVector computes the TF-IDF vector for a given document.
-func (tfidf *TFIDF) CalculateVector(doc string) map[string]float64 {
-	words := strings.Fields(doc)          // Split the document into individual words
-	processedWords := processWords(words) // Apply enhanced NLP processing
+// A TF-IDF score measures how important a word is to a specific document within a
+// collection of documents, taking into account how often the word appears in that
+// document (term frequency) and how rare it is across all documents in the collection
+// (inverse document frequency) - essentially giving more weight to words that are frequent
+// within a specific document but uncommon across the whole set of documents.
+func (tfidf *TFIDF) CalculateScores() map[string]float64 {
 
-	vector := make(map[string]float64)         // Initialize map to hold the TF-IDF vector
-	totalWords := float64(len(processedWords)) // Get total number of processed words
+	scores := make(map[string]float64)               // Initialize map to hold the TF-IDF vector
+	totalWords := float64(len(tfidf.ProcessedWords)) // Get total number of processed words
 
 	// Calculate the TF-IDF vector for each processed word
-	for _, word := range processedWords {
+	for _, word := range tfidf.ProcessedWords {
 		if _, exists := tfidf.TermFrequency[word]; exists { // Check if the word exists in Term Frequency map
 			// Calculate the TF-IDF score for the word and add it to the vector
-			vector[word] = (tfidf.TermFrequency[word] / totalWords) * tfidf.InverseDocFreq[word]
+			scores[word] = (tfidf.TermFrequency[word] / totalWords) * tfidf.InverseDocFreq[word]
 		}
 	}
-
-	return vector // Return the computed TF-IDF vector
+	tfidf.Scores = scores
+	return scores
 }
 
 // processWords applies the above NLP processing to a list of words.
