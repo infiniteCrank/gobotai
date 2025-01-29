@@ -2,18 +2,38 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 
-	"github.com/infiniteCrank/gobotai/tfidf"
+	pkgKNN "github.com/infiniteCrank/gobotai/knn"
+	pkgTFIDF "github.com/infiniteCrank/gobotai/tfidf"
 )
 
 func main() {
 	// init the corpus and supporting data
-	initialize()
+	tfidf := initializeTFIDF()
+	var inputQuery []string
+	inputQuery = append(inputQuery, "How do I define a function in go?")
+	queryVec := pkgTFIDF.NewTFIDF(inputQuery)
+	queryVec.CalculateScores()
+
+	// 1. format the data for training
+	knnData := pkgKNN.CreateDataSet(tfidf.Corpus)
+
+	// My query TF-IDF scores
+	queryVecScores := queryVec.Scores
+
+	// Retrieve the most relevant answer using KNN
+	k := 21 // Number of neighbors to consider
+	answer := pkgKNN.KNN(queryVecScores, knnData.Dataset, k)
+
+	// Print the result
+	fmt.Println("Most relevant content:", answer)
+
 }
 
-func initialize() *tfidf.TFIDF {
+func initializeTFIDF() *pkgTFIDF.TFIDF {
 	// Load the existing corpus of training phrases as text
 	corpus, err := LoadCorpus("go_corpus.md")
 	if err != nil {
@@ -23,7 +43,7 @@ func initialize() *tfidf.TFIDF {
 	// Create the TF-IDF model by:
 	// splitting the doc into words and counting each instance of a word
 	// calculating Inverse Document Frequency which says how important a word is
-	tfidf := tfidf.NewTFIDF(corpus)
+	tfidf := pkgTFIDF.NewTFIDF(corpus)
 
 	//Calculate and store TF-IDF scores for each word
 	tfidf.CalculateScores()

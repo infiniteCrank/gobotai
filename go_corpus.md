@@ -1,6 +1,6 @@
 # Go Programming Language Corpus
 
-## Overview of Go
+## ||| Overview of Go|||
 
 Go is an open-source programming language developed by Google. It is designed for system programming and emphasizes simplicity and efficiency. Key features include:
 
@@ -8,7 +8,7 @@ Go is an open-source programming language developed by Google. It is designed fo
 - **Garbage Collection**: Automatic memory management that helps prevent memory leaks.
 - **Concurrency**: Built-in support for concurrent programming with go-routines and channels.
 
-## Effective Go
+## ||| Effective Go|||
 
 Effective Go provides practical advice for writing clean and idiomatic Go code. Key principles include:
 
@@ -55,7 +55,7 @@ Effective Go provides practical advice for writing clean and idiomatic Go code. 
   ```
 - Use `panic` for unrecoverable errors and `recover` to regain control in deferred functions.
 
-## Working with Packages
+## ||| Working with Packages|||
 
 A package is a way to group related Go files together, improving organization and reuse.
 
@@ -76,7 +76,7 @@ A package is a way to group related Go files together, improving organization an
   )
   ```
 
-## Concurrency
+## ||| Concurrency|||
 
 Concurrency is one of Go's standout features, allowing multiple tasks to progress at once. Key constructs include go-routines and channels.
 
@@ -121,7 +121,7 @@ Concurrency is one of Go's standout features, allowing multiple tasks to progres
   }
   ```
 
-## Standard Library
+## ||| Standard Library|||
 
 The Go standard library offers a wide range of functionality across various domains, making it robust for development.
 
@@ -170,7 +170,7 @@ The Go standard library offers a wide range of functionality across various doma
   fmt.Println(decodedPerson)  // Output: {Bob 25}```
   ````
 
-## Database Access
+## ||| Database Access|||
 
 Go provides great support for database interactions through the database/sql package and various database drivers.
 
@@ -219,7 +219,7 @@ Go provides great support for database interactions through the database/sql pac
   err = ioutil.WriteFile("output.txt", data, 0644)
   ```
 
-## Go Development and Release Notes
+## ||| Go Development and Release Notes|||
 
 Go has a well-structured development process with a regular release schedule that includes improvements, features, and bug fixes.
 
@@ -239,7 +239,7 @@ To ensure the best performance, feature set, and security:
    Testing in Go
    Go has a built-in testing framework that makes it easy to write and run tests.
 
-## Testing in Go
+## ||| Testing in Go|||
 
 Testing is essential for ensuring code correctness. Go offers a built-in testing framework.
 
@@ -282,7 +282,7 @@ Testing is essential for ensuring code correctness. Go offers a built-in testing
 - Measure test coverage with:
   `go test -cover`
 
-## Documentation Standards
+## ||| Documentation Standards|||
 
 Proper documentation is crucial for maintaining and understanding code.
 
@@ -309,7 +309,7 @@ Proper documentation is crucial for maintaining and understanding code.
   go doc mypackage.FunctionName
   ```
 
-## Additional Standard Library Packages
+## ||| Additional Standard Library Packages|||
 
 Go's standard library includes powerful packages that extend functionality across various domains.
 
@@ -396,7 +396,7 @@ Go's standard library includes powerful packages that extend functionality acros
   }
   ```
 
-## Networking with Go
+## ||| Networking with Go|||
 
 Go makes it easy to perform networking tasks with the net package.
 
@@ -466,7 +466,7 @@ Go makes it easy to perform networking tasks with the net package.
   }
   ```
 
-## Common Patterns and Best Practices in Go
+## ||| Common Patterns and Best Practices in Go|||
 
 Efficient Go programming is often about following established patterns and practices.
 
@@ -508,7 +508,7 @@ Efficient Go programming is often about following established patterns and pract
   }()
   ```
 
-## Common Go Idioms
+## ||| Common Go Idioms|||
 
 Go programming has several idioms that developers use to improve clarity and maintainability.
 
@@ -615,7 +615,7 @@ Go programming has several idioms that developers use to improve clarity and mai
   defer file.Close() // Ensures that the file is closed when the function exits
   ```
 
-## Resource Management
+## ||| Resource Management|||
 
 Proper resource management in Go is vital for writing efficient and bug-free applications.
 
@@ -643,7 +643,7 @@ Proper resource management in Go is vital for writing efficient and bug-free app
   close(ch) // Close the channel when done sending data
   ```
 
-## Testing Patterns
+## ||| Testing Patterns|||
 
 Adopting correct patterns in testing can enhance the quality and reliability of your code.
 
@@ -686,7 +686,7 @@ Adopting correct patterns in testing can enhance the quality and reliability of 
   }
   ```
 
-## Error Handling Approaches
+## ||| Error Handling Approaches|||
 
 Error handling is a fundamental aspect of Go programming.
 
@@ -750,7 +750,7 @@ Error handling is a fundamental aspect of Go programming.
   }
   ```
 
-## Common Patterns in Go
+## ||| Common Patterns in Go|||
 
 Understanding common patterns can help in writing clean, maintainable Go code.
 
@@ -808,7 +808,7 @@ Understanding common patterns can help in writing clean, maintainable Go code.
   }
   ```
 
-## Interfaces
+## ||| Interfaces|||
 
 Interfaces in Go provide a way to define behavior. They allow you to specify methods that must be implemented by any type that claims to satisfy the interface.
 
@@ -849,7 +849,7 @@ Interfaces in Go provide a way to define behavior. They allow you to specify met
   fmt.Println(s.Area()) // Output: 12
   ```
 
-## Embedding
+## ||| Embedding|||
 
 Embedding is a way to achieve composition in Go, where one struct can include another struct.
 
@@ -882,7 +882,7 @@ Embedding is a way to achieve composition in Go, where one struct can include an
   fmt.Println(s.Name) // Accessing embedded field directly
   ```
 
-## Reflection
+## ||| Reflection|||
 
 Reflection lets you inspect types at runtime. It is available in the reflect package.
 
@@ -910,7 +910,7 @@ Reflection lets you inspect types at runtime. It is available in the reflect pac
   fmt.Println(x) // Output: 100
   ```
 
-## Advanced Programming Patterns
+## ||| Advanced Programming Patterns|||
 
 Understanding advanced patterns can aid in writing more flexible and maintainable Go applications.
 

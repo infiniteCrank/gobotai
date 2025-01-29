@@ -15,18 +15,20 @@ type TFIDF struct {
 	ProcessedWords []string           // words after lettimizing and stemming
 	Scores         map[string]float64 // Calculate the TF-IDF score  from TF and IDF
 	TopKeyWords    map[string]float64 // The top X keywords in the corpus
+	Corpus         string             // This is the plain text corpus
 }
 
 // NewTFIDF creates a new TFIDF instance based on the provided corpus of documents.
 func NewTFIDF(corpus []string) *TFIDF {
 	tf := make(map[string]float64)  // Initialize map to store term frequencies
 	idf := make(map[string]float64) // Initialize map to store inverse document frequencies
-
+	var wholeCorpus string
 	var wordsFinal []string
 	re := regexp.MustCompile("[^a-zA-Z0-9]+") // Match one or more non-letter and non-number characters
 
 	// Split document into words
 	for _, doc := range corpus {
+		wholeCorpus += doc
 		words := strings.Fields(doc)
 		for _, word := range words {
 			// replace punctuation with space
@@ -50,7 +52,7 @@ func NewTFIDF(corpus []string) *TFIDF {
 	}
 
 	// Return a new instance of TFIDF with calculated TF and IDF
-	return &TFIDF{TermFrequency: tf, InverseDocFreq: idf, WordsInDoc: wordsFinal, ProcessedWords: processedWords}
+	return &TFIDF{TermFrequency: tf, InverseDocFreq: idf, WordsInDoc: wordsFinal, ProcessedWords: processedWords, Corpus: wholeCorpus}
 }
 
 // countDocumentsContainingTerm counts how many documents contain a specific term.
