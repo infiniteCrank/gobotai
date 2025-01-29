@@ -89,7 +89,7 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 			// Print the result
 			fmt.Printf("Most relevant content: %+v \n", answers)
-			response := "Most relevant content: " + strings.Join(answers, ", ") + "\n"
+			response := "<b>Most relevant content: </b>" + strings.Join(answers, ", ") + "<br><br>\n"
 			corpusKeywords := tfidf.ExtractKeywords(20)
 			var relatedKeywords []string
 			for term := range corpusKeywords {
@@ -98,7 +98,7 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			fmt.Printf("Related Keywords: %+v \n", relatedKeywords)
-			response += "It looks like you are looking for something related to " + strings.Join(relatedKeywords, ", ") + ".\n"
+			response += "It looks like you are looking for something related to " + strings.Join(relatedKeywords, ", ") + ".<br><br>\n"
 			var newQuery string
 			for _, keyword := range relatedKeywords {
 				newQuery += " " + keyword
@@ -110,7 +110,39 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			newQueryVecScores := newQueryVec.Scores
 			newAnswers := pkgKNN.KNN(newQueryVecScores, knnData.Dataset, k, 3)
 			fmt.Printf("Best content: %+v \n", newAnswers)
-			response += "Here is the best headings to look under " + strings.Join(newAnswers, ", ") + " .\n"
+			response += "Here is the best headings to look under " + strings.Join(newAnswers, ", ") + " .<br><br>\n"
+			// add query words that ar greater than 4 characters to the answers list
+			for word := range queryVecScores {
+				if len(word) > 4 {
+					newAnswers = append(newAnswers, word)
+					answers = append(answers, word)
+				}
+			}
+
+			for _, corpusData := range knnData.FormattedCorpus {
+
+				//check to see if this part of the corpus is releveant to the AI answers
+				if contains(newAnswers, corpusData.Answer) {
+
+					for _, keyword := range relatedKeywords {
+						//check to see if the text contains a key word
+						if strings.Contains(corpusData.Text, keyword) {
+							response += corpusData.Text + "<br><br>\n"
+							break
+						}
+					}
+					//check to see if this part of the corpus is related to original answers
+				} else if contains(answers, corpusData.Answer) {
+					for word := range queryVecScores {
+						//check to see if the text contains a word from the original
+						if strings.Contains(corpusData.Text, word) {
+							response += corpusData.Text + "<br><br>\n"
+							break
+						}
+					}
+				}
+			}
+
 			// Send the response back to the client
 			err = conn.WriteJSON(map[string]string{"type": "response", "response": response})
 			if err != nil {
@@ -119,6 +151,15 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 		}
 	}
+}
+
+func contains(slice []string, value string) bool {
+	for _, v := range slice {
+		if v == value {
+			return true
+		}
+	}
+	return false
 }
 
 func initializeTFIDF() *pkgTFIDF.TFIDF {

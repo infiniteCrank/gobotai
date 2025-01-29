@@ -1,5 +1,40 @@
 # Go Programming Language Corpus
 
+## ||| Defining a function in go|||
+
+- To Define a function in go the syntax would be. 
+````go 
+func Addition() {
+  var a = 2
+  var b = 2
+  c:= a+b
+}
+````
+- Parameters: 
+````go 
+func Addition(a,b int) {
+  c:= a+b
+}
+````
+- Return: 
+````go 
+func Addition(a,b int) int{
+  c:= a+b
+  return c
+}
+````
+
+- Multiple Return Values: 
+````go 
+func Divide(a,b int) (int,error){
+  if b < 1 {
+    return fmt.Errorf("Divide by zero"), nil
+  }
+  c:= a/b
+  return c, nil
+}
+````
+
 ## ||| Overview of Go|||
 
 Go is an open-source programming language developed by Google. It is designed for system programming and emphasizes simplicity and efficiency. Key features include:
@@ -178,7 +213,8 @@ Go provides great support for database interactions through the database/sql pac
 
 - Open a connection to a database using `sql.Open`:
 
-  ````import (
+  ````go
+  import (
       "database/sql"
       _ "GitHub.com/go-sql-driver/mysql" // MySQL driver
   )
@@ -187,14 +223,14 @@ Go provides great support for database interactions through the database/sql pac
   if err != nil {
       log.Fatal(err)
   }
-  defer db.Close()```
+  defer db.Close()
   ````
 
 ### Executing Queries
 
 - Use Exec, Query, and QueryRow for executing SQL commands:
 
-  ```
+  ```go
   // Insert a row
   result, err := db.Exec("INSERT INTO users(name, age) VALUES(?, ?)", "John Doe", 30)
 
@@ -247,7 +283,7 @@ Testing is essential for ensuring code correctness. Go offers a built-in testing
 
 - Place your tests in files named \*\_test.go. A simple test function looks like this:
 
-  ```
+  ```go
   package mypackage
 
   import "testing"

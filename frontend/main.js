@@ -9,7 +9,8 @@ connection.onmessage = (event) => {
     
     if (msg.type === "response") {
         const messagesContainer = document.getElementById('messages');
-        messagesContainer.innerHTML += `<div>${msg.response}</div>`;
+        const htmlContent = marked(msg.response);
+        messagesContainer.innerHTML += `<div>${htmlContent}</div>`;
     }
 };
 
