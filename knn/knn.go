@@ -67,8 +67,8 @@ func (a ByDistance) Less(i, j int) bool {
 }
 
 // KNN function finds the k nearest neighbors to a given query vector.
-// It returns the most common answer among the nearest neighbors.
-func KNN(queryVec map[string]float64, dataset []DataPoint, k int) string {
+// It returns the top X most common answers among the nearest neighbors.
+func KNN(queryVec map[string]float64, dataset []DataPoint, k int, topX int) []string {
 	distances := make([]Distance, len(dataset)) // Initialize distances slice
 
 	// Calculate the Euclidean distance for each data point in the dataset
@@ -86,17 +86,30 @@ func KNN(queryVec map[string]float64, dataset []DataPoint, k int) string {
 		answerCount[dataset[distances[i].Index].Answer]++
 	}
 
-	// Determine the answer with the highest count (most common answer)
-	var bestAnswer string
-	maxCount := 0
+	// Create a slice to hold answers and their counts
+	type AnswerFrequency struct {
+		Answer string
+		Count  int
+	}
+	var frequencies []AnswerFrequency
+
+	// Fill the frequencies slice
 	for answer, count := range answerCount {
-		if count > maxCount {
-			maxCount = count
-			bestAnswer = answer
-		}
+		frequencies = append(frequencies, AnswerFrequency{Answer: answer, Count: count})
 	}
 
-	return bestAnswer // Return the most common answer among the nearest neighbors
+	// Sort frequencies by count in descending order
+	sort.Slice(frequencies, func(i, j int) bool {
+		return frequencies[i].Count > frequencies[j].Count
+	})
+
+	// Collect the top X answers
+	var topAnswers []string
+	for i := 0; i < topX && i < len(frequencies); i++ {
+		topAnswers = append(topAnswers, frequencies[i].Answer)
+	}
+
+	return topAnswers // Return the top X most common answers among the nearest neighbors
 }
 
 func FormatCorpus(corpus string) KNNData {

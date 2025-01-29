@@ -26,10 +26,10 @@ func main() {
 
 	// Retrieve the most relevant answer using KNN
 	k := 21 // Number of neighbors to consider
-	answer := pkgKNN.KNN(queryVecScores, knnData.Dataset, k)
+	answers := pkgKNN.KNN(queryVecScores, knnData.Dataset, k, 3)
 
 	// Print the result
-	fmt.Println("Most relevant content:", answer)
+	fmt.Printf("Most relevant content: %+v \n", answers)
 
 }
 
