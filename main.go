@@ -21,7 +21,7 @@ func main() {
 	http.HandleFunc("/ws", server.handleWebSocket)
 
 	// Serve static files
-	http.Handle("/", http.FileServer(http.Dir("../frontend")))
+	http.Handle("/", http.FileServer(http.Dir("./frontend")))
 
 	log.Println("Server started on :8080")
 	err := http.ListenAndServe(":8080", nil) // Start listening on port 8080
@@ -89,7 +89,7 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 			// Print the result
 			fmt.Printf("Most relevant content: %+v \n", answers)
-
+			response := "Most relevant content: " + strings.Join(answers, ", ") + "\n"
 			corpusKeywords := tfidf.ExtractKeywords(20)
 			var relatedKeywords []string
 			for term := range corpusKeywords {
@@ -98,7 +98,7 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			fmt.Printf("Related Keywords: %+v \n", relatedKeywords)
-			response := "It looks like you are looking for something related to " + strings.Join(relatedKeywords, ", ") + ".\n"
+			response += "It looks like you are looking for something related to " + strings.Join(relatedKeywords, ", ") + ".\n"
 			var newQuery string
 			for _, keyword := range relatedKeywords {
 				newQuery += " " + keyword
