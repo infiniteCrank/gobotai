@@ -194,7 +194,7 @@ func advancedStem(word string) string {
 	return word // Return the original word if no modifications were made
 }
 
-// Keyword extraction function
+// Keyword extraction function get the top x key words in the corpus
 func (tfidf *TFIDF) ExtractKeywords(topN int) map[string]float64 {
 
 	// Create a slice to hold the key-value pairs

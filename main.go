@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	pkgKNN "github.com/infiniteCrank/gobotai/knn"
 	pkgTFIDF "github.com/infiniteCrank/gobotai/tfidf"
@@ -31,6 +32,26 @@ func main() {
 	// Print the result
 	fmt.Printf("Most relevant content: %+v \n", answers)
 
+	corpusKeywords := tfidf.ExtractKeywords(20)
+	var relatedKeywords []string
+	for term := range corpusKeywords {
+		if strings.Contains(strings.ToLower(inputQuery[0]), term) {
+			relatedKeywords = append(relatedKeywords, term)
+		}
+	}
+	fmt.Printf("Related Keywords: %+v \n", relatedKeywords)
+
+	var newQuery string
+	for _, keyword := range relatedKeywords {
+		newQuery += " " + keyword
+	}
+	var stringSlice []string
+	stringSlice = append(stringSlice, newQuery)
+	newQueryVec := pkgTFIDF.NewTFIDF(stringSlice)
+	newQueryVec.CalculateScores()
+	newQueryVecScores := newQueryVec.Scores
+	newAnswers := pkgKNN.KNN(newQueryVecScores, knnData.Dataset, k, 3)
+	fmt.Printf("Best content: %+v \n", newAnswers)
 }
 
 func initializeTFIDF() *pkgTFIDF.TFIDF {
