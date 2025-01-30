@@ -76,6 +76,8 @@ function createWordCloud(data, svgId) {
 document.getElementById('send').onclick = () => {
     const query = document.getElementById('query').value;
     connection.send(JSON.stringify({ type: "query", query }));
+    const messagesContainer = document.getElementById('messages');
+    messagesContainer.innerHTML += `<div class="userQuery">${document.getElementById('query').value}</div>`;
     document.getElementById('query').value = ''; // Clear input field
 };
 
