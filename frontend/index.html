@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GoLang Chatbot</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/1.2.3/marked.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-cloud/1.2.5/d3.layout.cloud.js"></script>
     <script src="main.js" defer></script>
     <style>
         /* Add basic styling for interaction */
@@ -37,5 +39,9 @@
         <input type="text" id="query" placeholder="Type your question...">
         <button id="send">Send</button>
     </div>
+    <h2>Word Cloud for Query</h2>
+    <svg id="queryCloud" width="800" height="600"></svg>
+    <h2>Word Cloud for Corpus</h2>
+    <svg id="corpusCloud" width="800" height="600"></svg>
 </body>
 </html>

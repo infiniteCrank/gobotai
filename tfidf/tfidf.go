@@ -120,6 +120,7 @@ func lemmatize(word string) string {
 		"tests":      "test",
 		"loops":      "loop",
 		"deletes":    "delete",
+		"functions":  "function",
 	}
 
 	// Check if the word has a mapping in the rules

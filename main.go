@@ -2,10 +2,12 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/gorilla/websocket"
@@ -70,27 +72,42 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 		switch msg["type"] {
 		case "query":
 			query := msg["query"].(string)
+
+			// Compile the regular expression to match "go" or "golang"
+			re := regexp.MustCompile(`(?i)\b(go|golang)\b`)
+			re2 := regexp.MustCompile(`(?i)\b(Go|GoLang)\b`)
+
+			// Remove the matched words from the string
+			removeOutLiers := re.ReplaceAllString(query, "")
+			removeOutLiers = re2.ReplaceAllString(removeOutLiers, "")
+
 			// init the corpus and supporting data
 			tfidf := initializeTFIDF()
 			var inputQuery []string
-			inputQuery = append(inputQuery, query)
+			inputQuery = append(inputQuery, removeOutLiers)
 			queryVec := pkgTFIDF.NewTFIDF(inputQuery)
 			queryVec.CalculateScores()
 
-			// 1. format the data for training
+			// format the data for training
 			knnData := pkgKNN.CreateDataSet(tfidf.Corpus)
 
 			// My query TF-IDF scores
 			queryVecScores := queryVec.Scores
+			// match scores with original corpus words for accuracy
+			queryVecScores = fixScores(queryVecScores, tfidf.Scores)
 
 			// Retrieve the most relevant answer using KNN
 			k := 21 // Number of neighbors to consider
-			answers := pkgKNN.KNN(queryVecScores, knnData.Dataset, k, 3)
-
-			// Print the result
+			top := 5
+			// get the top five headings
+			answers := pkgKNN.KNN(queryVecScores, knnData.Dataset, k, top)
 			fmt.Printf("Most relevant content: %+v \n", answers)
-			response := "<b>Most relevant content: </b>" + strings.Join(answers, ", ") + "<br><br>\n"
+			//response := "<b>Most relevant content: </b>" + strings.Join(answers, ", ") + "<br><br>\n"
+
+			// extract the top 20 keywords from the query
 			corpusKeywords := tfidf.ExtractKeywords(20)
+
+			// search the user query query for the top 20 keywords
 			var relatedKeywords []string
 			for term := range corpusKeywords {
 				if strings.Contains(strings.ToLower(inputQuery[0]), term) {
@@ -98,20 +115,29 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			fmt.Printf("Related Keywords: %+v \n", relatedKeywords)
-			response += "It looks like you are looking for something related to " + strings.Join(relatedKeywords, ", ") + ".<br><br>\n"
+			//response += "It looks like you are looking for something related to " + strings.Join(relatedKeywords, ", ") + ".<br><br>\n"
+
+			// create a new query from related keywords that should be more accurate than user query
 			var newQuery string
 			for _, keyword := range relatedKeywords {
 				newQuery += " " + keyword
 			}
 			var stringSlice []string
 			stringSlice = append(stringSlice, newQuery)
+
+			//run the new keyword query
 			newQueryVec := pkgTFIDF.NewTFIDF(stringSlice)
 			newQueryVec.CalculateScores()
 			newQueryVecScores := newQueryVec.Scores
+
+			// match scores with original corpus words for accuracy
+			newQueryVecScores = fixScores(newQueryVecScores, tfidf.Scores)
+			// get three new topics from keywords
 			newAnswers := pkgKNN.KNN(newQueryVecScores, knnData.Dataset, k, 3)
 			fmt.Printf("Best content: %+v \n", newAnswers)
-			response += "Here is the best headings to look under " + strings.Join(newAnswers, ", ") + " .<br><br>\n"
-			// add query words that ar greater than 4 characters to the answers list
+			//response += "Here is the best headings to look under " + strings.Join(newAnswers, ", ") + " .<br><br>\n"
+
+			// add query words that are greater than 4 characters to the answers list
 			for word := range queryVecScores {
 				if len(word) > 4 {
 					newAnswers = append(newAnswers, word)
@@ -119,6 +145,7 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
+			response := ""
 			for _, corpusData := range knnData.FormattedCorpus {
 
 				//check to see if this part of the corpus is releveant to the AI answers
@@ -149,8 +176,34 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 				log.Println("Error on write:", err)
 			}
 
+			//create word maps
+			scoresJson, err := json.Marshal(tfidf.Scores)
+			if err != nil {
+				log.Printf("trouble in paradise: %+v", err)
+			}
+			queryScores, err := json.Marshal(queryVecScores)
+			if err != nil {
+				log.Printf("trouble in paradise: %+v", err)
+			}
+			err = conn.WriteJSON(map[string]string{"type": "scores", "corpus": string(scoresJson), "query": string(queryScores)})
+			if err != nil {
+				log.Println("Error on write:", err)
+			}
+
 		}
 	}
+}
+
+func fixScores(queryVecScores map[string]float64, corpusVecScores map[string]float64) map[string]float64 {
+	for queryWord, queryScore := range queryVecScores {
+		for corpusWord, corpusScore := range corpusVecScores {
+			if queryWord == corpusWord {
+				fmt.Printf("changing %+v score from %+v to %+v \n", queryWord, queryScore, corpusScore)
+				queryVecScores[queryWord] = corpusScore
+			}
+		}
+	}
+	return queryVecScores
 }
 
 func contains(slice []string, value string) bool {

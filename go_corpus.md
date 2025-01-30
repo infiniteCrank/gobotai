@@ -2,7 +2,7 @@
 
 ## ||| Defining a function in go|||
 
-- To Define a function in go the syntax would be. 
+### To Define a function in go the syntax would be. 
 ````go 
 func Addition() {
   var a = 2
@@ -10,13 +10,13 @@ func Addition() {
   c:= a+b
 }
 ````
-- Parameters: 
+### Functions with Parameters: 
 ````go 
 func Addition(a,b int) {
   c:= a+b
 }
 ````
-- Return: 
+### Functions with Return: 
 ````go 
 func Addition(a,b int) int{
   c:= a+b
@@ -24,7 +24,7 @@ func Addition(a,b int) int{
 }
 ````
 
-- Multiple Return Values: 
+### Functions with Multiple Return Values: 
 ````go 
 func Divide(a,b int) (int,error){
   if b < 1 {
