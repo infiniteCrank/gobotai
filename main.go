@@ -26,7 +26,7 @@ func main() {
 	http.Handle("/", http.FileServer(http.Dir("./frontend")))
 
 	log.Println("Server started on :8080")
-	err := http.ListenAndServe(":8080", nil) // Start listening on port 8080
+	err := http.ListenAndServe("127.0.0.1:8080", nil) // Start listening on port 8080
 	if err != nil {
 		log.Fatal("ListenAndServe: ", err) // Log any errors starting the server
 	}
@@ -54,6 +54,9 @@ func newServer() *Server {
 func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// upgrader for web sockets
 	var upgrader = websocket.Upgrader{}
+	// s.upgrader.CheckOrigin = func(r *http.Request) bool {
+	// 	return r.Header.Get("Origin") == "https://sectorj.com"
+	// }
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Error during connection upgrade:", err)
