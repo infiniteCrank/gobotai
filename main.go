@@ -44,6 +44,7 @@ func newServer() *Server {
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
 			CheckOrigin: func(r *http.Request) bool {
+				//return r.Header.Get("Origin") == "https://sectorj.com"
 				return true // Allow all connections for simplicity
 			},
 		},
@@ -54,9 +55,7 @@ func newServer() *Server {
 func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// upgrader for web sockets
 	var upgrader = websocket.Upgrader{}
-	// s.upgrader.CheckOrigin = func(r *http.Request) bool {
-	// 	return r.Header.Get("Origin") == "https://sectorj.com"
-	// }
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Error during connection upgrade:", err)

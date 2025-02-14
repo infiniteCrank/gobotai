@@ -6,7 +6,7 @@ connection.onopen = () => {
 
 connection.onmessage = (event) => {
     const msg = JSON.parse(event.data);
-    
+
     if (msg.type === "response") {
         const messagesContainer = document.getElementById('messages');
         const htmlContent = marked(msg.response);
@@ -16,25 +16,25 @@ connection.onmessage = (event) => {
 
         const corpusScores = JSON.parse(msg.corpus);
         formattedCorpusScores = formatD3Data(corpusScores);
-        console.log(formattedCorpusScores);
+        //console.log(formattedCorpusScores);
         // Create the corpus word cloud
         createWordCloud(formattedCorpusScores, "#corpusCloud");
 
         const queryScores = JSON.parse(msg.query);
         formattedQueryScores = formatD3Data(queryScores);
-        console.log(formattedQueryScores);
+        //console.log(formattedQueryScores);
         // Create the query word cloud
         createWordCloud(formattedQueryScores, "#queryCloud");
     }
 };
 
-function formatD3Data(jsonObject){
+function formatD3Data(jsonObject) {
     let formatted = [];
     for (const key in jsonObject) {
-      if (jsonObject.hasOwnProperty(key)) {
-        const value = jsonObject[key];
-        formatted.push({"word":key, "score":value})
-      }
+        if (jsonObject.hasOwnProperty(key)) {
+            const value = jsonObject[key];
+            formatted.push({ "word": key, "score": value })
+        }
     }
     return formatted;
 }

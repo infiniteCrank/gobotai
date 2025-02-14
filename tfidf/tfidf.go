@@ -9,103 +9,125 @@ import (
 
 // TFIDF struct holds the term frequency and inverse document frequency.
 type TFIDF struct {
-	TermFrequency  map[string]float64 // Frequencies of terms in the corpus
+	TermFrequency  map[string]float64 // Frequencies of terms (and n-grams) in the corpus
 	InverseDocFreq map[string]float64 // Inverse document frequencies for terms
-	WordsInDoc     []string           // this conatins all the words in the corpus
-	ProcessedWords []string           // words after lettimizing and stemming
-	Scores         map[string]float64 // Calculate the TF-IDF score  from TF and IDF
+	WordsInDoc     []string           // Raw tokens extracted from the corpus
+	ProcessedWords []string           // Processed tokens (filtered, stemmed, lemmatized, plus n-grams)
+	Scores         map[string]float64 // Calculated TF-IDF scores from TF and IDF
 	TopKeyWords    map[string]float64 // The top X keywords in the corpus
-	Corpus         string             // This is the plain text corpus
+	Corpus         string             // The plain text corpus (concatenated docs)
 }
 
 // NewTFIDF creates a new TFIDF instance based on the provided corpus of documents.
 func NewTFIDF(corpus []string) *TFIDF {
-	tf := make(map[string]float64)  // Initialize map to store term frequencies
-	idf := make(map[string]float64) // Initialize map to store inverse document frequencies
+	tf := make(map[string]float64)  // term frequencies
+	idf := make(map[string]float64) // inverse document frequencies
 	var wholeCorpus string
 	var wordsFinal []string
-	re := regexp.MustCompile("[^a-zA-Z0-9]+") // Match one or more non-letter and non-number characters
+	re := regexp.MustCompile("[^a-zA-Z0-9]+")
 
-	// Split document into words
+	// Process each document in the corpus.
 	for _, doc := range corpus {
 		wholeCorpus += doc
 		words := strings.Fields(doc)
 		for _, word := range words {
-			// replace punctuation with space
-			moreWords := re.ReplaceAllString(word, " ")
-			wordsToAdd := strings.Fields(moreWords)
-			wordsFinal = append(wordsFinal, wordsToAdd...)
+			// Replace punctuation with space.
+			cleanedWord := re.ReplaceAllString(word, " ")
+			// Split again in case punctuation removal resulted in multiple tokens.
+			tokens := strings.Fields(cleanedWord)
+			wordsFinal = append(wordsFinal, tokens...)
 		}
 	}
 
-	// Apply enhanced NLP processing
+	// Process words including filtering, stemming, lemmatization, and n-gram generation.
 	processedWords := processWords(wordsFinal)
 
-	// Calculate Term Frequency (TF)
-	for _, word := range processedWords {
-		tf[word]++ // Count occurrences of each word
+	// Compute term frequencies.
+	for _, token := range processedWords {
+		tf[token]++
 	}
 
-	// Calculate Inverse Document Frequency (IDF)
+	// Compute inverse document frequencies.
 	for term := range tf {
 		idf[term] = math.Log(float64(len(corpus)) / (1 + float64(countDocumentsContainingTerm(corpus, term))))
 	}
 
-	// Return a new instance of TFIDF with calculated TF and IDF
-	return &TFIDF{TermFrequency: tf, InverseDocFreq: idf, WordsInDoc: wordsFinal, ProcessedWords: processedWords, Corpus: wholeCorpus}
+	return &TFIDF{
+		TermFrequency:  tf,
+		InverseDocFreq: idf,
+		WordsInDoc:     wordsFinal,
+		ProcessedWords: processedWords,
+		Corpus:         wholeCorpus,
+	}
 }
 
-// countDocumentsContainingTerm counts how many documents contain a specific term.
+// countDocumentsContainingTerm counts how many documents in the corpus contain the given term.
 func countDocumentsContainingTerm(corpus []string, term string) int {
-	count := 0 // Initialize count to zero
+	count := 0
 	for _, doc := range corpus {
-		if strings.Contains(doc, term) { // Check if the term exists in the document
-			count++ // Increment count if term is found
+		if strings.Contains(doc, term) {
+			count++
 		}
 	}
-	return count // Return the total count
+	return count
 }
 
-// CalculateVector computes the TF-IDF vector for a given document.
+// CalculateScores computes the TF-IDF score for each token in the processed words.
 // A TF-IDF score measures how important a word is to a specific document within a
 // collection of documents, taking into account how often the word appears in that
 // document (term frequency) and how rare it is across all documents in the collection
 // (inverse document frequency) - essentially giving more weight to words that are frequent
 // within a specific document but uncommon across the whole set of documents.
 func (tfidf *TFIDF) CalculateScores() map[string]float64 {
-
-	scores := make(map[string]float64)               // Initialize map to hold the TF-IDF vector
-	totalWords := float64(len(tfidf.ProcessedWords)) // Get total number of processed words
-
-	// Calculate the TF-IDF vector for each processed word
-	for _, word := range tfidf.ProcessedWords {
-		if _, exists := tfidf.TermFrequency[word]; exists { // Check if the word exists in Term Frequency map
-			// Calculate the TF-IDF score for the word and add it to the vector
-			scores[word] = (tfidf.TermFrequency[word] / totalWords) * tfidf.InverseDocFreq[word]
+	scores := make(map[string]float64)
+	totalWords := float64(len(tfidf.ProcessedWords))
+	for _, token := range tfidf.ProcessedWords {
+		if freq, exists := tfidf.TermFrequency[token]; exists {
+			scores[token] = (freq / totalWords) * tfidf.InverseDocFreq[token]
 		}
 	}
 	tfidf.Scores = scores
 	return scores
 }
 
-// processWords applies the above NLP processing to a list of words.
+// processWords applies stop word removal, advanced stemming, lemmatization,
+// and generates bi-grams and tri-grams.
 func processWords(words []string) []string {
-	// Remove stop words and perform advanced stemming on the words
+	// Remove stop words and apply advanced stemming.
 	filtered := removeStopWordsAndAdvancedStem(words)
 
-	// Lemmatize the processed words
+	// Apply lemmatization.
 	for i, word := range filtered {
-		filtered[i] = lemmatize(word) // Apply lemmatization
+		filtered[i] = lemmatize(word)
 	}
 
-	return filtered // Return the final list of processed words
+	// Generate bi-grams and tri-grams from the filtered tokens.
+	bigrams := generateNGrams(filtered, 2)
+	trigrams := generateNGrams(filtered, 3)
+
+	// Combine unigrams, bi-grams, and tri-grams.
+	allTokens := append(filtered, bigrams...)
+	allTokens = append(allTokens, trigrams...)
+	return allTokens
 }
 
-// lemmatize targets programming-specific terms to convert them to their base form.
+// generateNGrams creates n-grams from a slice of tokens.
+func generateNGrams(tokens []string, n int) []string {
+	var ngrams []string
+	if len(tokens) < n {
+		return ngrams
+	}
+	for i := 0; i <= len(tokens)-n; i++ {
+		ngram := strings.Join(tokens[i:i+n], " ")
+		ngrams = append(ngrams, ngram)
+	}
+	return ngrams
+}
+
+// lemmatize converts a word to its base form using custom rules.
 func lemmatize(word string) string {
-	// Define lemmatization rules for common programming-related vocabulary
 	lemmatizationRules := map[string]string{
-		"execute":    "execute", // No change, but potentially useful when parsing
+		"execute":    "execute",
 		"running":    "run",
 		"returns":    "return",
 		"defined":    "define",
@@ -122,103 +144,78 @@ func lemmatize(word string) string {
 		"deletes":    "delete",
 		"functions":  "function",
 	}
-
-	// Check if the word has a mapping in the rules
-	if baseForm, found := lemmatizationRules[word]; found {
-		return baseForm // Return the lemmatized base form
+	if base, exists := lemmatizationRules[word]; exists {
+		return base
 	}
-
-	// Fallback: Remove common verb endings for simple transformations
-	if strings.HasSuffix(word, "ing") || strings.HasSuffix(word, "ed") {
-		return word[:len(word)-len("ing")] // Return the base form
+	// Basic removal of common suffixes as fallback.
+	if strings.HasSuffix(word, "ing") {
+		return word[:len(word)-len("ing")]
 	}
-
-	return word // Return the original word if no rules apply
+	if strings.HasSuffix(word, "ed") {
+		return word[:len(word)-len("ed")]
+	}
+	return word
 }
 
-// removeStopWordsAndAdvancedStem filters out stop words and applies advanced stemming.
+// removeStopWordsAndAdvancedStem removes common stop words and applies advanced stemming.
 func removeStopWordsAndAdvancedStem(words []string) []string {
-	// Define a set of common stop words.
-	// These are words that are typically filtered out before processing text.
-	var stopWords = map[string]struct{}{
+	stopWords := map[string]struct{}{
 		"a": {}, "and": {}, "the": {}, "is": {}, "to": {},
 		"of": {}, "in": {}, "it": {}, "that": {}, "you": {},
 		"this": {}, "for": {}, "on": {}, "are": {}, "with": {},
 		"as": {}, "be": {}, "by": {}, "at": {}, "from": {},
 		"or": {}, "an": {}, "but": {}, "not": {}, "we": {},
-		// Add more common stop words as necessary
 	}
-
-	filtered := []string{} // Initialize a slice to hold filtered and stemmed words
+	var filtered []string
 	for _, word := range words {
-		_, found := stopWords[word] // Check for stop words
-		if !found {
-			// Apply advanced stemming to the word
+		if _, exists := stopWords[word]; !exists {
 			stemmedWord := advancedStem(word)
-			filtered = append(filtered, stemmedWord) // Append to the filtered list
+			filtered = append(filtered, stemmedWord)
 		}
 	}
-	return filtered // Return the list of filtered and stemmed words
+	return filtered
 }
 
-// advancedStem applies a more sophisticated stemming process with programming-specific rules.
+// advancedStem applies simple suffix removal based on common suffixes.
 func advancedStem(word string) string {
-	// Define common suffixes to be removed
 	suffixes := []string{"es", "ed", "ing", "s", "ly", "ment", "ness", "ity", "ism", "er"}
-
-	// Specific keywords related to Go that should not be altered
 	programmingKeywords := map[string]struct{}{
 		"func": {}, "package": {}, "import": {}, "interface": {}, "go": {},
 		"goroutine": {}, "channel": {}, "select": {}, "struct": {},
 		"map": {}, "slice": {}, "var": {}, "const": {}, "type": {},
 		"defer": {}, "fallthrough": {},
 	}
-
-	// Check if the word is a Go keyword and return it unchanged
 	if _, isKeyword := programmingKeywords[word]; isKeyword {
 		return word
 	}
-
-	// Process the word to remove any common suffix
 	for _, suffix := range suffixes {
 		if strings.HasSuffix(word, suffix) {
-			// Handle the case for "ies" specifically
-			if suffix == "es" && strings.HasSuffix(word[:len(word)-2], "i") {
-				return word[:len(word)-2] // Return the stemmed word
+			// Special handling for suffix "es" preceded by "i"
+			if suffix == "es" && len(word) > 2 && word[len(word)-3] == 'i' {
+				return word[:len(word)-2]
 			}
-			if suffix == "ed" || suffix == "ing" {
-				return word[:len(word)-len(suffix)] // Return base form, e.g., "running" -> "run"
-			}
-			return word[:len(word)-len(suffix)] // Remove the suffix for other cases
+			return word[:len(word)-len(suffix)]
 		}
 	}
-	return word // Return the original word if no modifications were made
+	return word
 }
 
-// Keyword extraction function get the top x key words in the corpus
+// ExtractKeywords returns the top N keywords from the computed TF-IDF scores.
 func (tfidf *TFIDF) ExtractKeywords(topN int) map[string]float64 {
-
-	// Create a slice to hold the key-value pairs
 	type kv struct {
 		Key   string
 		Value float64
 	}
-
 	var sortedTerms []kv
 	for k, v := range tfidf.Scores {
 		sortedTerms = append(sortedTerms, kv{k, v})
 	}
-
-	// Sort the slice by value
 	sort.Slice(sortedTerms, func(i, j int) bool {
 		return sortedTerms[i].Value > sortedTerms[j].Value
 	})
-
-	// Create a map for the top N keywords
 	topKeywords := make(map[string]float64)
 	for i := 0; i < topN && i < len(sortedTerms); i++ {
 		topKeywords[sortedTerms[i].Key] = sortedTerms[i].Value
 	}
-
 	return topKeywords
 }
