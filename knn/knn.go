@@ -112,14 +112,15 @@ func KNN(queryVec map[string]float64, dataset []DataPoint, k int, topX int) []st
 	return topAnswers // Return the top X most common answers among the nearest neighbors
 }
 
+// FormatCorpus processes the raw corpus text and formats it into structured data entries.
 func FormatCorpus(corpus string) KNNData {
 	var knnData KNNData
-	// first lets split up the doc by headings ##
+	// Split the document by headings "## |||"
 	sections := strings.Split(corpus, "## |||")
 	var dataEntry DataEntry
 	var answer string
 	for _, section := range sections {
-		// next lets split up the sections by chapter ###
+		// Further split each section by chapter "###"
 		chapters := strings.Split(section, "###")
 		for index, chapter := range chapters {
 			if index == 0 {
@@ -143,13 +144,13 @@ func FormatCorpus(corpus string) KNNData {
 	return knnData
 }
 
+// CreateDataSet converts the formatted corpus into a dataset of DataPoints for KNN.
 func CreateDataSet(corpus string) KNNData {
 	knnData := FormatCorpus(corpus)
 	var dataPoint DataPoint
 	for _, corpusData := range knnData.FormattedCorpus {
-		var stringSlice []string
-		stringSlice = append(stringSlice, corpusData.Text)
-		tfidf := pkgTFIDF.NewTFIDF(stringSlice)
+		// Create a TF-IDF vector for each text entry.
+		tfidf := pkgTFIDF.NewTFIDF([]string{corpusData.Text})
 		tfidf.CalculateScores()
 		dataPoint.Vector = tfidf.Scores
 		dataPoint.Answer = corpusData.Answer

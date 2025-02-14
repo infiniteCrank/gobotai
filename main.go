@@ -102,7 +102,7 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			k := 21 // Number of neighbors to consider
 			top := 5
 			// get the top five headings
-			answers := pkgKNN.KNN(queryVecScores, knnData.Dataset, k, top)
+			answers := pkgKNN.KNNImproved(queryVecScores, knnData.Dataset, k, top)
 			fmt.Printf("Most relevant content: %+v \n", answers)
 			//response := "<b>Most relevant content: </b>" + strings.Join(answers, ", ") + "<br><br>\n"
 
@@ -135,7 +135,7 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			// match scores with original corpus words for accuracy
 			newQueryVecScores = fixScores(newQueryVecScores, tfidf.Scores)
 			// get three new topics from keywords
-			newAnswers := pkgKNN.KNN(newQueryVecScores, knnData.Dataset, k, 3)
+			newAnswers := pkgKNN.KNNImproved(newQueryVecScores, knnData.Dataset, k, 3)
 			fmt.Printf("Best content: %+v \n", newAnswers)
 			//response += "Here is the best headings to look under " + strings.Join(newAnswers, ", ") + " .<br><br>\n"
 
