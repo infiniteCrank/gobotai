@@ -104,64 +104,10 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			// get the top five headings
 			answers := pkgKNN.KNNImproved(queryVecScores, knnData.Dataset, k, top)
 			fmt.Printf("Most relevant content: %+v \n", answers)
-			//response := "<b>Most relevant content: </b>" + strings.Join(answers, ", ") + "<br><br>\n"
+			response := "<b>Most relevant content: </b>" + strings.Join(answers, ", ") + "<br><br>\n"
 
-			// extract the top 20 keywords from the query
-			corpusKeywords := tfidf.ExtractKeywords(20)
-
-			// search the user query query for the top 20 keywords
-			var relatedKeywords []string
-			for term := range corpusKeywords {
-				if strings.Contains(strings.ToLower(inputQuery[0]), term) {
-					relatedKeywords = append(relatedKeywords, term)
-				}
-			}
-			fmt.Printf("Related Keywords: %+v \n", relatedKeywords)
-			//response += "It looks like you are looking for something related to " + strings.Join(relatedKeywords, ", ") + ".<br><br>\n"
-
-			// create a new query from related keywords that should be more accurate than user query
-			var newQuery string
-			for _, keyword := range relatedKeywords {
-				newQuery += " " + keyword
-			}
-			var stringSlice []string
-			stringSlice = append(stringSlice, newQuery)
-
-			//run the new keyword query
-			newQueryVec := pkgTFIDF.NewTFIDF(stringSlice)
-			newQueryVec.CalculateScores()
-			newQueryVecScores := newQueryVec.Scores
-
-			// match scores with original corpus words for accuracy
-			newQueryVecScores = fixScores(newQueryVecScores, tfidf.Scores)
-			// get three new topics from keywords
-			newAnswers := pkgKNN.KNNImproved(newQueryVecScores, knnData.Dataset, k, 3)
-			fmt.Printf("Best content: %+v \n", newAnswers)
-			//response += "Here is the best headings to look under " + strings.Join(newAnswers, ", ") + " .<br><br>\n"
-
-			// add query words that are greater than 4 characters to the answers list
-			for word := range queryVecScores {
-				if len(word) > 4 {
-					newAnswers = append(newAnswers, word)
-					answers = append(answers, word)
-				}
-			}
-
-			response := ""
 			for _, corpusData := range knnData.FormattedCorpus {
-
-				//check to see if this part of the corpus is releveant to the AI answers
-				if contains(newAnswers, corpusData.Answer) {
-
-					for _, keyword := range relatedKeywords {
-						//check to see if the text contains a key word
-						if strings.Contains(corpusData.Text, keyword) {
-							response += corpusData.Text + "<br><br>\n"
-							break
-						}
-					}
-					//check to see if this part of the corpus is related to original answers
-				} else if contains(answers, corpusData.Answer) {
+				if contains(answers, corpusData.Answer) {
 					for word := range queryVecScores {
 						//check to see if the text contains a word from the original
 						if strings.Contains(corpusData.Text, word) {
