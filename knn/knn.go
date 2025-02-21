@@ -112,32 +112,56 @@ func KNN(queryVec map[string]float64, dataset []DataPoint, k int, topX int) []st
 	return topAnswers // Return the top X most common answers among the nearest neighbors
 }
 
-// FormatCorpus processes the raw corpus text and formats it into structured data entries.
 func FormatCorpus(corpus string) KNNData {
 	var knnData KNNData
-	// Split the document by headings "## |||"
+
+	// Trim the entire corpus to remove any leading/trailing whitespace.
+	corpus = strings.TrimSpace(corpus)
+
+	// Split the document by the section delimiter "## |||"
 	sections := strings.Split(corpus, "## |||")
-	var dataEntry DataEntry
-	var answer string
+
 	for _, section := range sections {
-		// Further split each section by chapter "###"
+		section = strings.TrimSpace(section)
+		if section == "" {
+			continue
+		}
+
+		// Split each section into chapters by the delimiter "###"
 		chapters := strings.Split(section, "###")
-		for index, chapter := range chapters {
-			if index == 0 {
-				answerText := strings.Split(chapter, "|||")
-				dataEntry.Answer = answerText[0]
-				answer = answerText[0]
-				if len(answerText) > 1 {
-					dataEntry.Text = answerText[1]
-				} else {
-					dataEntry.Text = "no text available"
-				}
-				knnData.FormattedCorpus = append(knnData.FormattedCorpus, dataEntry)
-			} else {
-				dataEntry.Answer = answer
-				dataEntry.Text = chapter
-				knnData.FormattedCorpus = append(knnData.FormattedCorpus, dataEntry)
+		var currentAnswer string
+
+		for idx, chapter := range chapters {
+			chapter = strings.TrimSpace(chapter)
+			if chapter == "" {
+				continue
 			}
+
+			// Create a new DataEntry for each chapter to avoid reusing the same variable.
+			var entry DataEntry
+
+			if idx == 0 {
+				// For the first chapter, split further by "|||"
+				answerText := strings.Split(chapter, "|||")
+				if len(answerText) > 0 {
+					entry.Answer = strings.TrimSpace(answerText[0])
+					currentAnswer = entry.Answer // Save the answer for subsequent chapters.
+				} else {
+					entry.Answer = ""
+					currentAnswer = ""
+				}
+				if len(answerText) > 1 {
+					entry.Text = strings.TrimSpace(answerText[1])
+				} else {
+					entry.Text = "no text available"
+				}
+			} else {
+				// For subsequent chapters, reuse the saved answer.
+				entry.Answer = currentAnswer
+				entry.Text = chapter
+			}
+
+			knnData.FormattedCorpus = append(knnData.FormattedCorpus, entry)
 		}
 	}
 

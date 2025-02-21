@@ -219,7 +219,7 @@ func contains(slice []string, value string) bool {
 
 func initializeTFIDF() *pkgTFIDF.TFIDF {
 	// Load the existing corpus of training phrases as text
-	corpus, err := LoadCorpus("go_corpus.md")
+	corpus, err := LoadCorpus("go_textbook.md")
 	if err != nil {
 		log.Fatal("Error loading corpus:", err)
 	}
