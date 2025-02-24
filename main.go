@@ -101,8 +101,11 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			k := 21 // Number of neighbors to consider
 			top := 1
 			// get the top five headings
-			answers := pkgKNN.KNNImproved(queryVecScores, knnData.Dataset, k, top)
-			fmt.Printf("Most relevant content: %+v \n", answers)
+			answersCos := pkgKNN.KNNImproved(queryVecScores, knnData.Dataset, k, top)
+			answersEucliedian := pkgKNN.KNN(queryVecScores, knnData.Dataset, k, top)
+			answers := pkgKNN.KNNCombined(queryVecScores, knnData.Dataset, k, top, .60, .20)
+			fmt.Printf("Most relevant content: %+v \n", answersCos)
+			fmt.Printf("Most relevant content: %+v \n", answersEucliedian)
 			response := "<b>Most relevant chapter: </b>" + strings.Join(answers, ", ") + "<br><br>\n"
 
 			for _, corpusData := range knnData.FormattedCorpus {
@@ -142,18 +145,6 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func fixScores(queryVecScores map[string]float64, corpusVecScores map[string]float64) map[string]float64 {
-	for queryWord, queryScore := range queryVecScores {
-		for corpusWord, corpusScore := range corpusVecScores {
-			if queryWord == corpusWord {
-				fmt.Printf("changing %+v score from %+v to %+v \n", queryWord, queryScore, corpusScore)
-				queryVecScores[queryWord] = corpusScore
-			}
-		}
-	}
-	return queryVecScores
-}
-
 func contains(slice []string, value string) bool {
 	for _, v := range slice {
 		if v == value {
@@ -164,11 +155,6 @@ func contains(slice []string, value string) bool {
 }
 
 func initializeTFIDF(filenames []string) *pkgTFIDF.TFIDF {
-	// Load the existing corpus of training phrases as text
-	// corpus, err := LoadCorpus("go_textbook.md")
-	// if err != nil {
-	// 	log.Fatal("Error loading corpus:", err)
-	// }
 	corpus, err := LoadCorpora(filenames)
 	if err != nil {
 		log.Fatal("Error loading corpora:", err)
