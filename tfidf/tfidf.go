@@ -219,3 +219,13 @@ func (tfidf *TFIDF) ExtractKeywords(topN int) map[string]float64 {
 	}
 	return topKeywords
 }
+
+// Add a method to return the index of processed words in TF-IDF
+func (tfidf *TFIDF) ProcessedWordsIndex(word string) int {
+	for i, w := range tfidf.ProcessedWords {
+		if w == word {
+			return i
+		}
+	}
+	return -1 // Not found
+}

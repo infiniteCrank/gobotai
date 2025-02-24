@@ -86,6 +86,7 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			// init the corpus and supporting data
 			corpusFiles := []string{"go_textbook.md", "go_corpus.md"}
 			tfidf := initializeTFIDF(corpusFiles)
+
 			var inputQuery []string
 			inputQuery = append(inputQuery, removeOutLiers)
 			queryVec := pkgTFIDF.NewTFIDF(inputQuery)
@@ -164,7 +165,6 @@ func initializeTFIDF(filenames []string) *pkgTFIDF.TFIDF {
 	// splitting the doc into words and counting each instance of a word
 	// calculating Inverse Document Frequency which says how important a word is
 	tfidf := pkgTFIDF.NewTFIDF(corpus)
-
 	//Calculate and store TF-IDF scores for each word
 	tfidf.CalculateScores()
 
