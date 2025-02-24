@@ -84,7 +84,8 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 			removeOutLiers = re2.ReplaceAllString(removeOutLiers, "")
 
 			// init the corpus and supporting data
-			tfidf := initializeTFIDF()
+			corpusFiles := []string{"go_textbook.md", "go_corpus.md"}
+			tfidf := initializeTFIDF(corpusFiles)
 			var inputQuery []string
 			inputQuery = append(inputQuery, removeOutLiers)
 			queryVec := pkgTFIDF.NewTFIDF(inputQuery)
@@ -95,23 +96,22 @@ func (s Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 
 			// My query TF-IDF scores
 			queryVecScores := queryVec.Scores
-			// match scores with original corpus words for accuracy
-			queryVecScores = fixScores(queryVecScores, tfidf.Scores)
 
 			// Retrieve the most relevant answer using KNN
 			k := 21 // Number of neighbors to consider
-			top := 5
+			top := 1
 			// get the top five headings
 			answers := pkgKNN.KNNImproved(queryVecScores, knnData.Dataset, k, top)
 			fmt.Printf("Most relevant content: %+v \n", answers)
-			response := "<b>Most relevant content: </b>" + strings.Join(answers, ", ") + "<br><br>\n"
+			response := "<b>Most relevant chapter: </b>" + strings.Join(answers, ", ") + "<br><br>\n"
 
 			for _, corpusData := range knnData.FormattedCorpus {
 				if contains(answers, corpusData.Answer) {
 					for word := range queryVecScores {
 						//check to see if the text contains a word from the original
 						if strings.Contains(corpusData.Text, word) {
-							response += corpusData.Text + "<br><br>\n"
+							formatedText := strings.ReplaceAll(corpusData.Text, "**", "<br>**")
+							response += formatedText + "<br><br>\n"
 							break
 						}
 					}
@@ -163,11 +163,15 @@ func contains(slice []string, value string) bool {
 	return false
 }
 
-func initializeTFIDF() *pkgTFIDF.TFIDF {
+func initializeTFIDF(filenames []string) *pkgTFIDF.TFIDF {
 	// Load the existing corpus of training phrases as text
-	corpus, err := LoadCorpus("go_textbook.md")
+	// corpus, err := LoadCorpus("go_textbook.md")
+	// if err != nil {
+	// 	log.Fatal("Error loading corpus:", err)
+	// }
+	corpus, err := LoadCorpora(filenames)
 	if err != nil {
-		log.Fatal("Error loading corpus:", err)
+		log.Fatal("Error loading corpora:", err)
 	}
 
 	// Create the TF-IDF model by:
@@ -202,4 +206,18 @@ func LoadCorpus(filename string) ([]string, error) {
 	}
 
 	return corpus, nil
+}
+
+func LoadCorpora(filenames []string) ([]string, error) {
+	var combinedCorpus []string
+
+	for _, filename := range filenames {
+		corpus, err := LoadCorpus(filename)
+		if err != nil {
+			return nil, err // Return error if any file fails to load
+		}
+		combinedCorpus = append(combinedCorpus, corpus...) // Append the loaded corpus
+	}
+
+	return combinedCorpus, nil
 }
